@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zokei3D — Photorealistic 3D Renders</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f; --surface: #13131a; --surface2: #1c1c28; --border: #2a2a3a;
+    --accent: #7c6cfc; --accent2: #fc6c9c; --text: #f0f0f8; --muted: #6b6b8a; --success: #4cfc9c;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+  body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.4;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E"); }
+  .bg-orb { position:fixed; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:0; }
+  .orb1 { width:600px; height:600px; background:rgba(124,108,252,0.12); top:-200px; right:-100px; }
+  .orb2 { width:400px; height:400px; background:rgba(252,108,156,0.08); bottom:0; left:-100px; }
+
+  nav { position:sticky; top:0; display:flex; align-items:center; justify-content:space-between; padding:1rem 2.5rem; border-bottom:1px solid var(--border); background:rgba(10,10,15,0.85); backdrop-filter:blur(20px); z-index:100; }
+  .logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:-0.02em; }
+  .nav-badge { font-size:0.7rem; padding:0.25rem 0.75rem; border-radius:100px; border:1px solid var(--border); color:var(--muted); font-weight:500; }
+
+  .tab-bar { display:flex; border-bottom:1px solid var(--border); background:var(--surface); }
+  .tab-btn { flex:1; padding:1rem 1.5rem; background:none; border:none; border-bottom:2px solid transparent; color:var(--muted); font-family:'Syne',sans-serif; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; cursor:pointer; transition:all 0.2s; }
+  .tab-btn:hover { color:var(--text); }
+  .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+  main { position:relative; z-index:1; max-width:1100px; margin:0 auto; padding:3rem 2rem 4rem; }
+  .hero { text-align:center; margin-bottom:3.5rem; }
+  .hero-eyebrow { display:inline-flex; align-items:center; gap:0.5rem; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--accent); font-weight:600; margin-bottom:1.25rem; padding:0.35rem 1rem; border:1px solid rgba(124,108,252,0.3); border-radius:100px; background:rgba(124,108,252,0.08); }
+  .hero h1 { font-family:'Syne',sans-serif; font-size:clamp(2.5rem,5vw,4rem); font-weight:800; line-height:1.05; letter-spacing:-0.03em; margin-bottom:1rem; }
+  .hero h1 .grad { background:linear-gradient(135deg,#a89cff 0%,#fc6c9c 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero p { color:var(--muted); font-size:1.1rem; font-weight:300; max-width:480px; margin:0 auto; line-height:1.7; }
+
+  .app-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; overflow:hidden; }
+  .api-section { padding:1.25rem 2rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+  .api-label { font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); white-space:nowrap; }
+  .api-input-wrap { flex:1; position:relative; min-width:240px; }
+  .api-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0.65rem 3rem 0.65rem 1rem; color:var(--text); font-size:0.85rem; outline:none; transition:border-color 0.2s; }
+  .api-input:focus { border-color:var(--accent); }
+  .api-input::placeholder { color:var(--muted); }
+  .api-toggle { position:absolute; right:0.75rem; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.85rem; padding:0.25rem; }
+  .api-toggle:hover { color:var(--text); }
+  .api-status { font-size:0.78rem; padding:0.3rem 0.8rem; border-radius:100px; border:1px solid; white-space:nowrap; }
+  .api-status.set { color:var(--success); border-color:rgba(76,252,156,0.3); background:rgba(76,252,156,0.06); }
+  .api-status.unset { color:var(--muted); border-color:var(--border); }
+
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  .panels { display:grid; grid-template-columns:1fr 1fr; min-height:520px; }
+  @media(max-width:700px) { .panels { grid-template-columns:1fr; } }
+  .panel { padding:2rem; }
+  .panel-left { border-right:1px solid var(--border); }
+  .panel-title { font-family:'Syne',sans-serif; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:1.25rem; }
+
+  .upload-zone { border:2px dashed var(--border); border-radius:14px; padding:2.5rem 1.5rem; text-align:center; cursor:pointer; transition:all 0.3s; position:relative; margin-bottom:1.5rem; background:var(--surface2); }
+  .upload-zone:hover,.upload-zone.dragover { border-color:var(--accent); background:rgba(124,108,252,0.05); }
+  .upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .upload-icon { width:48px; height:48px; margin:0 auto 1rem; border-radius:12px; background:linear-gradient(135deg,rgba(124,108,252,0.2),rgba(252,108,156,0.1)); border:1px solid rgba(124,108,252,0.3); display:flex; align-items:center; justify-content:center; font-size:1.4rem; }
+  .upload-zone h3 { font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; margin-bottom:0.4rem; }
+  .upload-zone p { color:var(--muted); font-size:0.82rem; line-height:1.6; }
+  .preview-img { width:100%; border-radius:10px; object-fit:cover; max-height:220px; display:none; margin-bottom:1rem; border:1px solid var(--border); }
+  .style-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0.5rem; margin-bottom:1.5rem; }
+  .style-btn { padding:0.5rem 0.4rem; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.72rem; font-weight:500; cursor:pointer; transition:all 0.2s; text-align:center; }
+  .style-btn:hover { border-color:var(--accent); color:var(--text); }
+  .style-btn.active { border-color:var(--accent); background:rgba(124,108,252,0.15); color:var(--accent); }
+  .prompt-label { font-size:0.78rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.5rem; display:block; }
+  .prompt-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0.75rem 1rem; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.85rem; resize:vertical; min-height:70px; outline:none; transition:border-color 0.2s; margin-bottom:1.25rem; }
+  .prompt-input:focus { border-color:var(--accent); }
+  .prompt-input::placeholder { color:var(--muted); }
+  .render-btn { width:100%; padding:0.9rem; border-radius:12px; border:none; background:linear-gradient(135deg,var(--accent),#9c6cfc); color:white; font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; letter-spacing:0.02em; cursor:pointer; transition:all 0.25s; position:relative; overflow:hidden; }
+  .render-btn::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent); opacity:0; transition:opacity 0.2s; }
+  .render-btn:hover::before { opacity:1; }
+  .render-btn:hover { transform:translateY(-1px); box-shadow:0 8px 30px rgba(124,108,252,0.35); }
+  .render-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+  .output-area { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; }
+  .output-placeholder { text-align:center; color:var(--muted); }
+  .output-placeholder .ph-icon { font-size:3rem; margin-bottom:1rem; opacity:0.4; }
+  .output-placeholder p { font-size:0.88rem; line-height:1.6; max-width:200px; }
+  .output-img { width:100%; border-radius:12px; object-fit:cover; border:1px solid var(--border); display:none; animation:fadeIn 0.5s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:scale(0.98)} to{opacity:1;transform:scale(1)} }
+  .loading-state { display:none; text-align:center; color:var(--muted); }
+  .spinner { width:48px; height:48px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--accent); animation:spin 0.8s linear infinite; margin:0 auto 1.25rem; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .loading-state p { font-size:0.88rem; line-height:1.7; }
+  .loading-steps { margin-top:1rem; display:flex; flex-direction:column; gap:0.4rem; }
+  .loading-step { font-size:0.75rem; color:var(--muted); display:flex; align-items:center; gap:0.5rem; justify-content:center; opacity:0; transition:opacity 0.4s; }
+  .loading-step.active { opacity:1; color:var(--accent); }
+  .loading-step.done { opacity:1; }
+  .loading-step.done::before { content:'✓'; color:var(--success); }
+  .loading-step:not(.done)::before { content:'·'; }
+  .action-btn { display:none; margin-top:0.6rem; width:100%; padding:0.7rem; border-radius:10px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; cursor:pointer; transition:all 0.2s; text-align:center; }
+  .action-btn:hover { border-color:var(--accent); background:rgba(124,108,252,0.1); }
+  .action-btn.accent { border-color:rgba(124,108,252,0.4); color:var(--accent); }
+  .error-msg { display:none; margin-top:1rem; padding:0.85rem 1rem; border-radius:10px; border:1px solid rgba(252,108,108,0.3); background:rgba(252,108,108,0.06); color:#fc9c9c; font-size:0.82rem; line-height:1.6; }
+
+  /* ===== EDIT TAB ===== */
+  .edit-layout { display:grid; grid-template-columns:1fr 300px; min-height:600px; }
+  @media(max-width:800px) { .edit-layout { grid-template-columns:1fr; } }
+  .canvas-area { padding:1.5rem; border-right:1px solid var(--border); display:flex; flex-direction:column; gap:0.75rem; }
+  .canvas-toolbar { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
+  .tool-btn { display:flex; align-items:center; gap:0.4rem; padding:0.45rem 0.85rem; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.75rem; font-weight:500; cursor:pointer; transition:all 0.2s; }
+  .tool-btn:hover { border-color:var(--accent); color:var(--text); }
+  .tool-btn.active { border-color:var(--accent); background:rgba(124,108,252,0.15); color:var(--accent); }
+  .tool-btn.danger { border-color:rgba(252,108,108,0.3); color:#fc9c9c; }
+  .tool-btn.danger:hover { border-color:#fc9c9c; background:rgba(252,108,108,0.08); }
+  .canvas-hint { font-size:0.72rem; color:var(--muted); padding:0.35rem 0.75rem; border-radius:6px; background:var(--surface2); border:1px solid var(--border); margin-left:auto; }
+  .canvas-wrap { position:relative; flex:1; border-radius:12px; overflow:hidden; border:1px solid var(--border); background:#0d0d14; min-height:400px; display:flex; align-items:center; justify-content:center; }
+  #editCanvas { display:block; max-width:100%; max-height:500px; cursor:crosshair; }
+  .canvas-empty { text-align:center; color:var(--muted); pointer-events:none; }
+  .canvas-empty .ph-icon { font-size:2.5rem; margin-bottom:0.75rem; opacity:0.3; }
+  .canvas-empty p { font-size:0.82rem; max-width:180px; line-height:1.6; }
+  .node-badge { position:absolute; top:0.5rem; left:0.5rem; font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:100px; background:rgba(124,108,252,0.85); color:white; font-weight:600; pointer-events:none; display:none; }
+
+  .edit-upload-zone { border:2px dashed var(--border); border-radius:12px; padding:1.25rem 1.5rem; text-align:center; cursor:pointer; transition:all 0.3s; position:relative; background:var(--surface2); }
+  .edit-upload-zone:hover { border-color:var(--accent2); background:rgba(252,108,156,0.04); }
+  .edit-upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .edit-upload-zone p { color:var(--muted); font-size:0.82rem; }
+
+  .edit-controls { padding:1.5rem; display:flex; flex-direction:column; gap:1.1rem; overflow-y:auto; }
+  .edit-section-title { font-family:'Syne',sans-serif; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:0.5rem; }
+  .selection-status { padding:0.65rem 0.9rem; border-radius:10px; border:1px solid var(--border); background:var(--surface2); font-size:0.78rem; color:var(--muted); line-height:1.5; }
+  .selection-status.has-selection { border-color:rgba(76,252,156,0.3); background:rgba(76,252,156,0.04); color:var(--success); }
+
+  .quick-edits { display:grid; grid-template-columns:1fr 1fr; gap:0.4rem; }
+  .quick-edit-btn { padding:0.45rem 0.4rem; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.68rem; font-weight:500; cursor:pointer; transition:all 0.2s; text-align:center; }
+  .quick-edit-btn:hover { border-color:var(--accent2); color:var(--text); background:rgba(252,108,156,0.06); }
+
+  .edit-prompt-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0.75rem 1rem; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.85rem; resize:vertical; min-height:75px; outline:none; transition:border-color 0.2s; }
+  .edit-prompt-input:focus { border-color:var(--accent2); }
+  .edit-prompt-input::placeholder { color:var(--muted); }
+
+  .inpaint-btn { width:100%; padding:0.85rem; border-radius:12px; border:none; background:linear-gradient(135deg,var(--accent2),#e04080); color:white; font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700; letter-spacing:0.02em; cursor:pointer; transition:all 0.25s; }
+  .inpaint-btn:hover { transform:translateY(-1px); box-shadow:0 8px 30px rgba(252,108,156,0.35); }
+  .inpaint-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+  .edit-result-img { width:100%; border-radius:10px; border:1px solid var(--border); display:none; animation:fadeIn 0.5s ease; }
+  .edit-loading { display:none; text-align:center; padding:1.5rem 0; color:var(--muted); }
+  .edit-spinner { width:36px; height:36px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--accent2); animation:spin 0.8s linear infinite; margin:0 auto 0.75rem; }
+  .edit-error { display:none; margin-top:0.75rem; padding:0.75rem 1rem; border-radius:10px; border:1px solid rgba(252,108,108,0.3); background:rgba(252,108,108,0.06); color:#fc9c9c; font-size:0.8rem; line-height:1.5; }
+  .use-as-source-btn { display:none; margin-top:0.5rem; width:100%; padding:0.6rem; border-radius:8px; border:1px solid rgba(76,252,156,0.3); background:rgba(76,252,156,0.06); color:var(--success); font-family:'DM Sans',sans-serif; font-size:0.8rem; font-weight:500; cursor:pointer; transition:all 0.2s; }
+  .use-as-source-btn:hover { background:rgba(76,252,156,0.12); }
+
+  .help-note { text-align:center; color:var(--muted); font-size:0.78rem; margin-top:2.5rem; line-height:1.7; }
+  .help-note a { color:var(--accent); text-decoration:none; }
+  .help-note a:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+
+<nav>
+  <div class="logo">Zokei3D<span style="font-size:0.6rem;font-weight:400;color:var(--muted);margin-left:3px;font-family:'DM Sans',sans-serif;">.ai</span></div>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <div class="nav-badge">Powered by FAL.ai</div>
+    <div class="nav-badge" style="color:var(--accent);border-color:rgba(124,108,252,0.3);">Beta</div>
+  </div>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">✦ AI-Powered 3D Rendering</div>
+    <h1>Turn sketches into<br><span class="grad">photorealistic renders</span></h1>
+    <p>Transform your 3D model screenshots into photorealistic renders — then edit any area with precision using our polygonal selection tool.</p>
+  </div>
+
+  <div class="app-card">
+
+    <div class="api-section">
+      <span class="api-label">FAL API Key</span>
+      <div class="api-input-wrap">
+        <input type="password" class="api-input" id="apiKey" placeholder="Paste your FAL.ai API key here" oninput="updateApiStatus()">
+        <button class="api-toggle" onclick="toggleApiVisibility()">👁</button>
+      </div>
+      <div class="api-status unset" id="apiStatus">Not set</div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('render',this)">✦ Generate Render</button>
+      <button class="tab-btn" onclick="switchTab('edit',this)">✏ Edit Selection</button>
+    </div>
+
+    <!-- RENDER TAB -->
+    <div class="tab-panel active" id="tab-render">
+      <div class="panels">
+        <div class="panel panel-left">
+          <div class="panel-title">01 — Your Model Screenshot</div>
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="fileInput" accept="image/*" onchange="handleFile(event)">
+            <div class="upload-icon">🏛</div>
+            <h3>Drop your image here</h3>
+            <p>JPG, PNG, WebP · SketchUp, Blender, Revit screenshots</p>
+          </div>
+          <img class="preview-img" id="previewImg" alt="Model preview">
+
+          <div class="panel-title">02 — Choose a Style</div>
+          <div class="style-grid">
+            <button class="style-btn active" onclick="selectStyle(this,'photorealistic interior design, natural lighting, warm ambiance')">🏠 Interior</button>
+            <button class="style-btn" onclick="selectStyle(this,'photorealistic architectural exterior render, golden hour lighting, realistic materials')">🏢 Exterior</button>
+            <button class="style-btn" onclick="selectStyle(this,'photorealistic product render, studio lighting, clean white background')">📦 Product</button>
+            <button class="style-btn" onclick="selectStyle(this,'photorealistic landscape architecture render, lush greenery, daylight')">🌿 Landscape</button>
+            <button class="style-btn" onclick="selectStyle(this,'photorealistic minimalist modern interior, concrete and wood, diffused light')">⬜ Minimal</button>
+            <button class="style-btn" onclick="selectStyle(this,'dramatic architectural render, night lighting, luxury aesthetic')">🌙 Night</button>
+          </div>
+
+          <label class="prompt-label">03 — Custom Instructions (optional)</label>
+          <textarea class="prompt-input" id="customPrompt" placeholder="e.g. Add plants, wooden flooring, warm pendant lights..."></textarea>
+          <button class="render-btn" id="renderBtn" onclick="startRender()">✦ Generate Render</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">04 — Your Render</div>
+          <div class="output-area" id="outputArea">
+            <div class="output-placeholder" id="placeholder">
+              <div class="ph-icon">✦</div>
+              <p>Your photorealistic render will appear here</p>
+            </div>
+            <div class="loading-state" id="loadingState">
+              <div class="spinner"></div>
+              <p>Generating your render…</p>
+              <div class="loading-steps">
+                <div class="loading-step" id="step1">Analyzing your scene</div>
+                <div class="loading-step" id="step2">Applying materials & lighting</div>
+                <div class="loading-step" id="step3">Rendering photorealistic details</div>
+                <div class="loading-step" id="step4">Finalizing output</div>
+              </div>
+            </div>
+            <img class="output-img" id="outputImg" alt="AI Render">
+            <button class="action-btn" id="downloadBtn" onclick="downloadRender()">⬇ Download Render</button>
+            <button class="action-btn accent" id="editThisBtn" onclick="sendToEditor()">✏ Edit this render</button>
+            <div class="error-msg" id="errorMsg"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT TAB -->
+    <div class="tab-panel" id="tab-edit">
+      <div class="edit-layout">
+
+        <div class="canvas-area">
+          <div class="canvas-toolbar">
+            <button class="tool-btn active" id="toolDraw" onclick="setTool('draw')">⬡ Draw Selection</button>
+            <button class="tool-btn danger" onclick="clearSelection()">✕ Clear</button>
+            <button class="tool-btn" onclick="undoLastPoint()">↩ Undo Point</button>
+            <div class="canvas-hint" id="canvasHint">Click to place points · Double-click or click start to close</div>
+          </div>
+          <div class="canvas-wrap" id="canvasWrap">
+            <div class="canvas-empty" id="canvasEmpty">
+              <div class="ph-icon">✏</div>
+              <p>Load an image below to start editing</p>
+            </div>
+            <canvas id="editCanvas"></canvas>
+            <div class="node-badge" id="nodeBadge"></div>
+          </div>
+          <div class="edit-upload-zone" id="editUploadZone">
+            <input type="file" id="editFileInput" accept="image/*" onchange="loadEditImage(event)">
+            <p>📂 Load an image to edit — or click "Edit this render" from the Generate tab</p>
+          </div>
+        </div>
+
+        <div class="edit-controls">
+          <div>
+            <div class="edit-section-title">Selection</div>
+            <div class="selection-status" id="selectionStatus">No selection — draw a polygon on the image</div>
+          </div>
+
+          <div>
+            <div class="edit-section-title">Quick Edits</div>
+            <div class="quick-edits">
+              <button class="quick-edit-btn" onclick="setEditPrompt('Replace with polished marble flooring')">🪨 Marble</button>
+              <button class="quick-edit-btn" onclick="setEditPrompt('Replace with hardwood oak flooring')">🪵 Wood Floor</button>
+              <button class="quick-edit-btn" onclick="setEditPrompt('Replace with white painted brick wall')">🧱 Brick Wall</button>
+              <button class="quick-edit-btn" onclick="setEditPrompt('Add a large indoor plant')">🌿 Add Plant</button>
+              <button class="quick-edit-btn" onclick="setEditPrompt('Replace with large glass window with natural light')">🪟 Glass Window</button>
+              <button class="quick-edit-btn" onclick="setEditPrompt('Replace with modern pendant light fixture')">💡 Pendant Light</button>
+              <button class="quick-edit-btn" onclick="setEditPrompt('Replace with exposed concrete texture')">🏗 Concrete</button>
+              <button class="quick-edit-btn" onclick="setEditPrompt('Remove object, replace with empty clean space')">🗑 Remove</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="edit-section-title">Describe the change</div>
+            <textarea class="edit-prompt-input" id="editPrompt" placeholder="e.g. Replace with polished marble, add a sofa, change to wood panelling..."></textarea>
+          </div>
+
+          <button class="inpaint-btn" id="inpaintBtn" onclick="startInpaint()">✏ Apply Edit to Selection</button>
+
+          <div>
+            <div class="edit-loading" id="editLoading">
+              <div class="edit-spinner"></div>
+              <p style="font-size:0.82rem">Applying your edit…</p>
+            </div>
+            <img class="edit-result-img" id="editResultImg" alt="Edited result">
+            <button class="use-as-source-btn" id="useAsSourceBtn" onclick="useEditAsSource()">✓ Use as new source for further edits</button>
+            <div class="edit-error" id="editError"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <p class="help-note">
+    Need an API key? <a href="https://fal.ai" target="_blank">Sign up free at fal.ai</a> — includes free credits to get started ·
+    <a href="https://fal.ai/dashboard/keys" target="_blank">Get your key →</a>
+  </p>
+</main>
+
+<footer style="position:relative;z-index:1;border-top:1px solid var(--border);padding:1.5rem 2.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;background:rgba(10,10,15,0.6);backdrop-filter:blur(10px);">
+  <div style="display:flex;align-items:center;gap:0.5rem;">
+    <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:0.95rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Zokei3D.ai</span>
+    <span style="color:var(--muted);font-size:0.75rem;">— Photorealistic AI Rendering</span>
+  </div>
+  <div style="color:var(--muted);font-size:0.75rem;text-align:center;">
+    Built with ❤ by <strong style="color:var(--text);">Emil Joe Antony</strong>
+  </div>
+  <div style="font-size:0.72rem;color:var(--muted);">
+    © 2025 Zokei3D · Powered by <a href="https://fal.ai" target="_blank" style="color:var(--accent);text-decoration:none;">FAL.ai</a>
+  </div>
+</footer>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let selectedStyle = 'photorealistic interior design, natural lighting, warm ambiance';
+let uploadedImageBase64 = null;
+let renderUrl = null;
+
+let editImageEl = null;
+let editImageBase64 = null;
+let editCanvasScale = 1;
+let polygonPoints = [];
+let isPolygonClosed = false;
+let currentTool = 'draw';
+let hoverPos = null;
+
+const canvas = document.getElementById('editCanvas');
+const ctx = canvas.getContext('2d');
+canvas.style.display = 'none';
+
+// ─── SHARED ───────────────────────────────────────────────
+function updateApiStatus() {
+  const key = document.getElementById('apiKey').value.trim();
+  const s = document.getElementById('apiStatus');
+  if (key.length > 10) { s.textContent = '✓ Key set'; s.className = 'api-status set'; }
+  else { s.textContent = 'Not set'; s.className = 'api-status unset'; }
+}
+function toggleApiVisibility() {
+  const inp = document.getElementById('apiKey');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ─── RENDER TAB ───────────────────────────────────────────
+function selectStyle(btn, style) {
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedStyle = style;
+}
+function handleFile(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    uploadedImageBase64 = ev.target.result.split(',')[1];
+    document.getElementById('previewImg').src = ev.target.result;
+    document.getElementById('previewImg').style.display = 'block';
+    document.getElementById('uploadZone').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+const dropZone = document.getElementById('uploadZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) handleFile({ target: { files: [f] } });
+});
+
+async function startRender() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const customPrompt = document.getElementById('customPrompt').value.trim();
+  if (!apiKey || apiKey.length < 10) { showError('Please enter your FAL.ai API key.'); return; }
+  if (!uploadedImageBase64) { showError('Please upload a 3D model screenshot first.'); return; }
+  setLoading(true); clearError();
+  const steps = ['step1','step2','step3','step4'];
+  let si = 0;
+  const iv = setInterval(() => {
+    if (si > 0) document.getElementById(steps[si-1]).classList.add('done');
+    if (si < steps.length) { document.getElementById(steps[si]).classList.add('active'); si++; }
+  }, 1800);
+  const prompt = `${selectedStyle}${customPrompt ? ', '+customPrompt : ''}. Highly detailed, 4K, photorealistic, professional visualization.`;
+  try {
+    const res = await fetch('https://fal.run/fal-ai/flux-pro/kontext', {
+      method:'POST',
+      headers:{ 'Authorization':`Key ${apiKey}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ prompt, image_url:`data:image/jpeg;base64,${uploadedImageBase64}`, num_inference_steps:28, guidance_scale:3.5, num_images:1 })
+    });
+    clearInterval(iv);
+    steps.forEach(s => { document.getElementById(s).classList.add('done'); document.getElementById(s).classList.remove('active'); });
+    if (!res.ok) { const e = await res.json().catch(()=>{}); throw new Error(e?.detail||e?.message||`API error ${res.status}`); }
+    const data = await res.json();
+    renderUrl = data.images?.[0]?.url || data.image?.url;
+    if (!renderUrl) throw new Error('No image returned. Please try again.');
+    setLoading(false); showOutput(renderUrl);
+  } catch(err) { clearInterval(iv); setLoading(false); showError(`Render failed: ${err.message}`); }
+}
+function setLoading(on) {
+  document.getElementById('renderBtn').disabled = on;
+  document.getElementById('renderBtn').textContent = on ? '⏳ Rendering…' : '✦ Generate Render';
+  document.getElementById('placeholder').style.display = on ? 'none' : 'flex';
+  document.getElementById('loadingState').style.display = on ? 'block' : 'none';
+  document.getElementById('outputImg').style.display = 'none';
+  document.getElementById('downloadBtn').style.display = 'none';
+  document.getElementById('editThisBtn').style.display = 'none';
+  if (on) ['step1','step2','step3','step4'].forEach(s => document.getElementById(s).classList.remove('active','done'));
+}
+function showOutput(url) {
+  document.getElementById('outputImg').src = url;
+  document.getElementById('outputImg').style.display = 'block';
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('downloadBtn').style.display = 'block';
+  document.getElementById('editThisBtn').style.display = 'block';
+}
+function showError(msg) { document.getElementById('errorMsg').textContent = msg; document.getElementById('errorMsg').style.display = 'block'; document.getElementById('placeholder').style.display = 'flex'; }
+function clearError() { document.getElementById('errorMsg').style.display = 'none'; }
+function downloadRender() {
+  if (!renderUrl) return;
+  const a = document.createElement('a'); a.href = renderUrl; a.download = 'zokei3d-render.png'; a.target = '_blank'; a.click();
+}
+function sendToEditor() {
+  if (!renderUrl) return;
+  const img = new Image(); img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    loadImageOntoCanvas(img, renderUrl);
+    document.querySelectorAll('.tab-btn')[1].click();
+  };
+  img.src = renderUrl;
+}
+
+// ─── EDIT TAB — LOAD IMAGE ────────────────────────────────
+function loadEditImage(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => loadImageOntoCanvas(img, ev.target.result);
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function loadImageOntoCanvas(img, src) {
+  editImageEl = img;
+  const wrap = document.getElementById('canvasWrap');
+  const maxW = wrap.clientWidth - 4;
+  const maxH = 500;
+  let w = img.naturalWidth, h = img.naturalHeight;
+  const scale = Math.min(maxW / w, maxH / h, 1);
+  w = Math.round(w * scale); h = Math.round(h * scale);
+  editCanvasScale = scale;
+  canvas.width = w; canvas.height = h;
+  canvas.style.display = 'block';
+  document.getElementById('canvasEmpty').style.display = 'none';
+  document.getElementById('editUploadZone').style.display = 'none';
+
+  if (src.startsWith('data:')) {
+    editImageBase64 = src.split(',')[1];
+  } else {
+    const off = document.createElement('canvas');
+    off.width = img.naturalWidth; off.height = img.naturalHeight;
+    off.getContext('2d').drawImage(img, 0, 0);
+    editImageBase64 = off.toDataURL('image/jpeg', 0.95).split(',')[1];
+  }
+  clearSelection();
+}
+
+// ─── EDIT TAB — POLYGON TOOL ─────────────────────────────
+function setTool(t) {
+  currentTool = t;
+  document.getElementById('toolDraw').classList.toggle('active', t === 'draw');
+  canvas.style.cursor = t === 'draw' ? 'crosshair' : 'default';
+}
+function getCanvasPos(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * (canvas.width / r.width), y: (e.clientY - r.top) * (canvas.height / r.height) };
+}
+function nearFirst(x, y) {
+  if (polygonPoints.length < 3) return false;
+  const p = polygonPoints[0];
+  return Math.hypot(x - p.x, y - p.y) < 14;
+}
+canvas.addEventListener('mousemove', e => {
+  if (!editImageEl || isPolygonClosed) return;
+  hoverPos = getCanvasPos(e);
+  redrawCanvas();
+  if (polygonPoints.length > 0) {
+    const { x, y } = hoverPos;
+    ctx.save();
+    ctx.strokeStyle = nearFirst(x, y) ? '#4cfc9c' : 'rgba(160,140,255,0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.moveTo(polygonPoints[polygonPoints.length-1].x, polygonPoints[polygonPoints.length-1].y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.restore();
+  }
+});
+canvas.addEventListener('click', e => {
+  if (!editImageEl || currentTool !== 'draw' || isPolygonClosed) return;
+  const { x, y } = getCanvasPos(e);
+  if (nearFirst(x, y)) { closePolygon(); return; }
+  polygonPoints.push({ x, y });
+  updateNodeBadge(); updateSelectionStatus(); redrawCanvas();
+});
+canvas.addEventListener('dblclick', e => {
+  if (!editImageEl || currentTool !== 'draw' || isPolygonClosed) return;
+  e.preventDefault();
+  if (polygonPoints.length >= 3) closePolygon();
+});
+function closePolygon() {
+  if (polygonPoints.length < 3) return;
+  isPolygonClosed = true;
+  setTool('move');
+  updateSelectionStatus(); updateNodeBadge(); redrawCanvas();
+}
+function clearSelection() {
+  polygonPoints = []; isPolygonClosed = false; hoverPos = null;
+  setTool('draw');
+  document.getElementById('nodeBadge').style.display = 'none';
+  updateSelectionStatus();
+  redrawCanvas();
+}
+function undoLastPoint() {
+  if (isPolygonClosed) { isPolygonClosed = false; setTool('draw'); }
+  polygonPoints.pop();
+  updateNodeBadge(); updateSelectionStatus(); redrawCanvas();
+}
+function updateNodeBadge() {
+  const b = document.getElementById('nodeBadge');
+  if (polygonPoints.length > 0) { b.style.display = 'block'; b.textContent = polygonPoints.length + ' pts'; }
+  else b.style.display = 'none';
+}
+function updateSelectionStatus() {
+  const el = document.getElementById('selectionStatus');
+  if (isPolygonClosed) { el.textContent = `✓ ${polygonPoints.length}-point selection ready to edit`; el.className = 'selection-status has-selection'; }
+  else if (polygonPoints.length > 0) { el.textContent = `${polygonPoints.length} point${polygonPoints.length>1?'s':''} — double-click or click start to close`; el.className = 'selection-status'; }
+  else { el.textContent = 'No selection — draw a polygon on the image'; el.className = 'selection-status'; }
+}
+function redrawCanvas() {
+  if (!editImageEl) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(editImageEl, 0, 0, canvas.width, canvas.height);
+  if (polygonPoints.length === 0) return;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(polygonPoints[0].x, polygonPoints[0].y);
+  polygonPoints.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+  if (isPolygonClosed) {
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(124,108,252,0.22)';
+    ctx.fill();
+    ctx.strokeStyle = '#a89cff';
+    ctx.setLineDash([]);
+  } else {
+    ctx.strokeStyle = 'rgba(124,108,252,0.85)';
+    ctx.setLineDash([]);
+  }
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  // Node dots
+  polygonPoints.forEach((p, i) => {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, i === 0 ? 7 : 5, 0, Math.PI * 2);
+    ctx.fillStyle = i === 0 ? '#4cfc9c' : '#a89cff';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+  });
+}
+
+// ─── EDIT TAB — INPAINT ───────────────────────────────────
+function setEditPrompt(txt) { document.getElementById('editPrompt').value = txt; }
+
+function generateMaskBase64() {
+  const nw = editImageEl.naturalWidth, nh = editImageEl.naturalHeight;
+  const off = document.createElement('canvas');
+  off.width = nw; off.height = nh;
+  const oc = off.getContext('2d');
+  oc.fillStyle = 'black';
+  oc.fillRect(0, 0, nw, nh);
+  if (polygonPoints.length < 3) return null;
+  const invScale = 1 / editCanvasScale;
+  oc.fillStyle = 'white';
+  oc.beginPath();
+  oc.moveTo(polygonPoints[0].x * invScale, polygonPoints[0].y * invScale);
+  polygonPoints.slice(1).forEach(p => oc.lineTo(p.x * invScale, p.y * invScale));
+  oc.closePath();
+  oc.fill();
+  return off.toDataURL('image/png').split(',')[1];
+}
+
+async function startInpaint() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const prompt = document.getElementById('editPrompt').value.trim();
+  if (!apiKey || apiKey.length < 10) { showEditError('Please enter your FAL.ai API key at the top.'); return; }
+  if (!editImageBase64) { showEditError('Please load an image to edit first.'); return; }
+  if (!isPolygonClosed || polygonPoints.length < 3) { showEditError('Please draw and close a selection polygon first.'); return; }
+  if (!prompt) { showEditError('Please describe what to change in your selection.'); return; }
+  const maskB64 = generateMaskBase64();
+  if (!maskB64) { showEditError('Could not generate mask. Please redraw selection.'); return; }
+  setEditLoading(true); clearEditError();
+  try {
+    const res = await fetch('https://fal.run/fal-ai/flux-pro/v1/fill', {
+      method:'POST',
+      headers:{ 'Authorization':`Key ${apiKey}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        prompt:`${prompt}. Photorealistic, seamlessly blended, high detail, professional architectural visualization.`,
+        image_url:`data:image/jpeg;base64,${editImageBase64}`,
+        mask_url:`data:image/png;base64,${maskB64}`,
+        num_inference_steps:28, guidance_scale:3.5, num_images:1
+      })
+    });
+    if (!res.ok) { const e = await res.json().catch(()=>{}); throw new Error(e?.detail||e?.message||`API error ${res.status}`); }
+    const data = await res.json();
+    const url = data.images?.[0]?.url || data.image?.url;
+    if (!url) throw new Error('No result image returned.');
+    setEditLoading(false);
+    showEditResult(url);
+  } catch(err) { setEditLoading(false); showEditError(`Edit failed: ${err.message}`); }
+}
+function setEditLoading(on) {
+  document.getElementById('inpaintBtn').disabled = on;
+  document.getElementById('inpaintBtn').textContent = on ? '⏳ Applying edit…' : '✏ Apply Edit to Selection';
+  document.getElementById('editLoading').style.display = on ? 'block' : 'none';
+  document.getElementById('editResultImg').style.display = 'none';
+  document.getElementById('useAsSourceBtn').style.display = 'none';
+}
+function showEditResult(url) {
+  const img = document.getElementById('editResultImg');
+  img.src = url; img.style.display = 'block';
+  document.getElementById('useAsSourceBtn').style.display = 'block';
+}
+function showEditError(msg) { const el = document.getElementById('editError'); el.textContent = msg; el.style.display = 'block'; }
+function clearEditError() { document.getElementById('editError').style.display = 'none'; }
+function useEditAsSource() {
+  const img = document.getElementById('editResultImg');
+  if (!img.src) return;
+  const newImg = new Image(); newImg.crossOrigin = 'anonymous';
+  newImg.onload = () => { loadImageOntoCanvas(newImg, img.src); document.getElementById('editResultImg').style.display = 'none'; document.getElementById('useAsSourceBtn').style.display = 'none'; };
+  newImg.src = img.src;
+}
+</script>
+</body>
+</html>
