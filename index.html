@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zokei3D — Photorealistic 3D Renders</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root {
     --bg: #0a0a0f; --surface: #13131a; --surface2: #1c1c28; --border: #2a2a3a;
@@ -792,21 +792,38 @@ function useEditAsSource() {
 // ─── SUPABASE AUTH ────────────────────────────────────────
 const SUPABASE_URL = 'https://wqcimsyfzkbipzlkfeqz.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxY2ltc3lmemtiaXB6bGtmZXF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzOTg5MzcsImV4cCI6MjA4ODk3NDkzN30.3J8H8z2nFKlROI5cCLoq2a_lEziXf729_s_5aq6O_7M';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// Safe init - handles both CDN export styles
+let sb;
+try {
+  sb = (window.supabase && window.supabase.createClient)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+    : supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON);
+} catch(e) {
+  console.error('Supabase init failed:', e);
+}
 
 let currentUser = null;
 
-// Check session on load
-supabase.auth.getSession().then(({ data: { session } }) => {
+// Check existing session on page load
+async function initAuth() {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) onLoggedIn(session.user);
+    else showAuthScreen();
+  } catch(e) {
+    console.error('Session check failed:', e);
+    showAuthScreen();
+  }
+}
+
+// Listen for login/logout events
+sb.auth.onAuthStateChange((_event, session) => {
   if (session) onLoggedIn(session.user);
   else showAuthScreen();
 });
 
-// Listen for auth changes
-supabase.auth.onAuthStateChange((_event, session) => {
-  if (session) onLoggedIn(session.user);
-  else showAuthScreen();
-});
+initAuth();
 
 function showAuthScreen() {
   document.getElementById('authScreen').style.display = 'flex';
@@ -819,7 +836,7 @@ function onLoggedIn(user) {
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('navUser').style.display = 'flex';
   document.getElementById('navUserEmail').textContent = user.email;
-  loadSavedFalKey(user.id);
+  loadSavedFalKey();
 }
 
 function switchAuthTab(tab) {
@@ -835,11 +852,19 @@ async function doLogin() {
   const btn = document.getElementById('loginBtn');
   const errEl = document.getElementById('loginError');
   errEl.style.display = 'none';
-  if (!email || !password) { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
+  if (!email || !password) {
+    errEl.textContent = 'Please enter your email and password.';
+    errEl.style.display = 'block'; return;
+  }
   btn.disabled = true; btn.textContent = 'Signing in…';
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  } catch(e) {
+    errEl.textContent = e.message || 'Sign in failed. Please try again.';
+    errEl.style.display = 'block';
+  }
   btn.disabled = false; btn.textContent = 'Sign In →';
-  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
 }
 
 async function doSignup() {
@@ -850,52 +875,84 @@ async function doSignup() {
   const errEl = document.getElementById('signupError');
   const okEl = document.getElementById('signupSuccess');
   errEl.style.display = 'none'; okEl.style.display = 'none';
-  if (!email || !password) { errEl.textContent = 'Please fill in email and password.'; errEl.style.display = 'block'; return; }
-  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
+
+  if (!email || !password) {
+    errEl.textContent = 'Please fill in your email and password.';
+    errEl.style.display = 'block'; return;
+  }
+  if (password.length < 6) {
+    errEl.textContent = 'Password must be at least 6 characters.';
+    errEl.style.display = 'block'; return;
+  }
+
   btn.disabled = true; btn.textContent = 'Creating account…';
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email, password,
+      options: { data: { fal_key: falKey || '' } }
+    });
+    if (error) throw error;
+
+    // Supabase returns a user even before email confirmation
+    // Check if email confirmation is required
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      errEl.textContent = 'An account with this email already exists. Please sign in instead.';
+      errEl.style.display = 'block';
+    } else {
+      okEl.textContent = '✓ Account created! Check your email for a confirmation link, then sign in.';
+      okEl.style.display = 'block';
+      // Clear form
+      document.getElementById('signupEmail').value = '';
+      document.getElementById('signupPassword').value = '';
+      document.getElementById('signupFalKey').value = '';
+    }
+  } catch(e) {
+    errEl.textContent = e.message || 'Signup failed. Please try again.';
+    errEl.style.display = 'block';
+  }
   btn.disabled = false; btn.textContent = 'Create Account →';
-  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
-  // Save FAL key if provided
-  if (falKey && data.user) await storeFalKey(data.user.id, falKey);
-  okEl.textContent = '✓ Account created! Check your email to confirm, then sign in.';
-  okEl.style.display = 'block';
 }
 
 async function signOut() {
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   document.getElementById('apiKey').value = '';
   updateApiStatus();
 }
 
 // ─── FAL KEY STORAGE ──────────────────────────────────────
-// Store FAL key in Supabase user metadata (encrypted at rest by Supabase)
-async function storeFalKey(userId, key) {
-  await supabase.auth.updateUser({ data: { fal_key: key } });
-}
-
-async function loadSavedFalKey(userId) {
-  const { data: { user } } = await supabase.auth.getUser();
-  const saved = user?.user_metadata?.fal_key;
-  if (saved) {
-    document.getElementById('apiKey').value = saved;
-    updateApiStatus();
-    document.getElementById('saveKeyBtn').textContent = '✓ Key saved';
-    document.getElementById('saveKeyBtn').style.color = 'var(--success)';
-    document.getElementById('saveKeyBtn').style.borderColor = 'rgba(76,252,156,0.3)';
-  }
+async function loadSavedFalKey() {
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    const saved = user?.user_metadata?.fal_key;
+    if (saved && saved.length > 5) {
+      document.getElementById('apiKey').value = saved;
+      updateApiStatus();
+      const btn = document.getElementById('saveKeyBtn');
+      btn.textContent = '✓ Key saved';
+      btn.style.color = 'var(--success)';
+      btn.style.borderColor = 'rgba(76,252,156,0.3)';
+      btn.style.background = 'rgba(76,252,156,0.06)';
+    }
+  } catch(e) { console.error('Could not load FAL key:', e); }
 }
 
 async function saveFalKey() {
   const key = document.getElementById('apiKey').value.trim();
-  if (!key || key.length < 10) { alert('Please enter a valid FAL key first.'); return; }
+  if (!key || key.length < 10) { alert('Please enter a valid FAL API key first.'); return; }
   if (!currentUser) { alert('Please sign in first.'); return; }
   const btn = document.getElementById('saveKeyBtn');
-  btn.textContent = 'Saving…';
-  await storeFalKey(currentUser.id, key);
-  btn.textContent = '✓ Key saved';
-  btn.style.color = 'var(--success)';
-  btn.style.borderColor = 'rgba(76,252,156,0.3)';
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    await sb.auth.updateUser({ data: { fal_key: key } });
+    btn.textContent = '✓ Saved!';
+    btn.style.color = 'var(--success)';
+    btn.style.borderColor = 'rgba(76,252,156,0.3)';
+    btn.style.background = 'rgba(76,252,156,0.06)';
+  } catch(e) {
+    btn.textContent = '💾 Save to account';
+    alert('Could not save key: ' + e.message);
+  }
+  btn.disabled = false;
 }
 </script>
 </body>
