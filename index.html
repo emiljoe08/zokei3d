@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zokei3D — Photorealistic 3D Renders</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0a0a0f; --surface: #13131a; --surface2: #1c1c28; --border: #2a2a3a;
@@ -148,6 +149,71 @@
   .help-note { text-align:center; color:var(--muted); font-size:0.78rem; margin-top:2.5rem; line-height:1.7; }
   .help-note a { color:var(--accent); text-decoration:none; }
   .help-note a:hover { text-decoration:underline; }
+
+  /* ===== AUTH SCREEN ===== */
+  #authScreen {
+    position:fixed; inset:0; z-index:200;
+    background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    padding:1.5rem;
+  }
+  #authScreen::before {
+    content:''; position:absolute; inset:0; pointer-events:none; opacity:0.4;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+  .auth-orb1 { position:absolute; width:500px; height:500px; background:rgba(124,108,252,0.14); top:-150px; right:-100px; border-radius:50%; filter:blur(100px); pointer-events:none; }
+  .auth-orb2 { position:absolute; width:350px; height:350px; background:rgba(252,108,156,0.09); bottom:-80px; left:-80px; border-radius:50%; filter:blur(100px); pointer-events:none; }
+  .auth-card {
+    position:relative; z-index:1;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:24px; padding:2.5rem 2rem;
+    width:100%; max-width:420px;
+    animation:fadeIn 0.4s ease;
+  }
+  .auth-logo {
+    text-align:center; margin-bottom:2rem;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:1.8rem;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    letter-spacing:-0.02em;
+  }
+  .auth-logo span { font-size:1rem; font-weight:400; color:var(--muted); -webkit-text-fill-color:var(--muted); }
+  .auth-tabs { display:flex; background:var(--surface2); border-radius:12px; padding:4px; margin-bottom:1.75rem; gap:4px; }
+  .auth-tab { flex:1; padding:0.6rem; border-radius:9px; border:none; background:none; color:var(--muted); font-family:'Syne',sans-serif; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s; }
+  .auth-tab.active { background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,0.3); }
+  .auth-field { margin-bottom:1rem; }
+  .auth-field label { display:block; font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.45rem; }
+  .auth-field input {
+    width:100%; background:var(--surface2); border:1px solid var(--border);
+    border-radius:10px; padding:0.75rem 1rem; color:var(--text);
+    font-family:'DM Sans',sans-serif; font-size:0.9rem; outline:none; transition:border-color 0.2s;
+  }
+  .auth-field input:focus { border-color:var(--accent); }
+  .auth-field input::placeholder { color:var(--muted); }
+  .auth-submit {
+    width:100%; padding:0.9rem; border-radius:12px; border:none;
+    background:linear-gradient(135deg,var(--accent),#9c6cfc); color:white;
+    font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700;
+    cursor:pointer; transition:all 0.25s; margin-top:0.5rem;
+  }
+  .auth-submit:hover { transform:translateY(-1px); box-shadow:0 8px 30px rgba(124,108,252,0.35); }
+  .auth-submit:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+  .auth-error { margin-top:0.75rem; padding:0.75rem 1rem; border-radius:10px; border:1px solid rgba(252,108,108,0.3); background:rgba(252,108,108,0.06); color:#fc9c9c; font-size:0.82rem; display:none; }
+  .auth-success { margin-top:0.75rem; padding:0.75rem 1rem; border-radius:10px; border:1px solid rgba(76,252,156,0.3); background:rgba(76,252,156,0.06); color:var(--success); font-size:0.82rem; display:none; }
+  .auth-divider { text-align:center; color:var(--muted); font-size:0.75rem; margin:1.25rem 0; position:relative; }
+  .auth-divider::before { content:''; position:absolute; left:0; top:50%; width:42%; height:1px; background:var(--border); }
+  .auth-divider::after { content:''; position:absolute; right:0; top:50%; width:42%; height:1px; background:var(--border); }
+  .auth-fal-note { margin-top:1.25rem; padding:0.85rem 1rem; border-radius:10px; background:rgba(124,108,252,0.06); border:1px solid rgba(124,108,252,0.2); font-size:0.78rem; color:var(--muted); line-height:1.6; }
+  .auth-fal-note strong { color:var(--accent); }
+
+  /* Nav user area */
+  .nav-user { display:flex; align-items:center; gap:0.6rem; }
+  .nav-user-email { font-size:0.72rem; color:var(--muted); max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .nav-logout { font-size:0.72rem; padding:0.25rem 0.7rem; border-radius:100px; border:1px solid var(--border); background:none; color:var(--muted); cursor:pointer; transition:all 0.2s; font-family:'DM Sans',sans-serif; }
+  .nav-logout:hover { border-color:#fc9c9c; color:#fc9c9c; }
+
+  /* FAL key save indicator */
+  .fal-saved-badge { font-size:0.72rem; padding:0.2rem 0.6rem; border-radius:100px; background:rgba(76,252,156,0.1); border:1px solid rgba(76,252,156,0.3); color:var(--success); }
 </style>
 </head>
 <body>
@@ -159,8 +225,61 @@
   <div style="display:flex;align-items:center;gap:0.75rem;">
     <div class="nav-badge">Powered by FAL.ai</div>
     <div class="nav-badge" style="color:var(--accent);border-color:rgba(124,108,252,0.3);">Beta</div>
+    <div class="nav-user" id="navUser" style="display:none;">
+      <span class="nav-user-email" id="navUserEmail"></span>
+      <button class="nav-logout" onclick="signOut()">Sign out</button>
+    </div>
   </div>
 </nav>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-orb1"></div>
+  <div class="auth-orb2"></div>
+  <div class="auth-card">
+    <div class="auth-logo">Zokei3D<span>.ai</span></div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" id="tabSignup" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="loginForm">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
+      </div>
+      <button class="auth-submit" id="loginBtn" onclick="doLogin()">Sign In →</button>
+      <div class="auth-error" id="loginError"></div>
+    </div>
+
+    <!-- Signup form -->
+    <div id="signupForm" style="display:none;">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="signupPassword" placeholder="Min. 6 characters" autocomplete="new-password">
+      </div>
+      <div class="auth-field">
+        <label>FAL.ai API Key <span style="color:var(--muted);font-size:0.7rem;text-transform:none;letter-spacing:0;">(optional — add later in settings)</span></label>
+        <input type="password" id="signupFalKey" placeholder="fal-... or paste your key">
+      </div>
+      <button class="auth-submit" id="signupBtn" onclick="doSignup()">Create Account →</button>
+      <div class="auth-error" id="signupError"></div>
+      <div class="auth-success" id="signupSuccess"></div>
+      <div class="auth-fal-note">
+        <strong>Where to get a FAL key?</strong> Sign up free at <a href="https://fal.ai" target="_blank" style="color:var(--accent);">fal.ai</a> → Dashboard → API Keys. Free credits included.
+      </div>
+    </div>
+  </div>
+</div>
 
 <main>
   <div class="hero">
@@ -178,6 +297,7 @@
         <button class="api-toggle" onclick="toggleApiVisibility()">👁</button>
       </div>
       <div class="api-status unset" id="apiStatus">Not set</div>
+      <button onclick="saveFalKey()" style="padding:0.4rem 0.9rem;border-radius:8px;border:1px solid rgba(124,108,252,0.4);background:rgba(124,108,252,0.1);color:var(--accent);font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;" id="saveKeyBtn">💾 Save to account</button>
     </div>
 
     <div class="tab-bar">
@@ -667,6 +787,115 @@ function useEditAsSource() {
   const newImg = new Image(); newImg.crossOrigin = 'anonymous';
   newImg.onload = () => { loadImageOntoCanvas(newImg, img.src); document.getElementById('editResultImg').style.display = 'none'; document.getElementById('useAsSourceBtn').style.display = 'none'; };
   newImg.src = img.src;
+}
+
+// ─── SUPABASE AUTH ────────────────────────────────────────
+const SUPABASE_URL = 'https://wqcimsyfzkbipzlkfeqz.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxY2ltc3lmemtiaXB6bGtmZXF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzOTg5MzcsImV4cCI6MjA4ODk3NDkzN30.3J8H8z2nFKlROI5cCLoq2a_lEziXf729_s_5aq6O_7M';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let currentUser = null;
+
+// Check session on load
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (session) onLoggedIn(session.user);
+  else showAuthScreen();
+});
+
+// Listen for auth changes
+supabase.auth.onAuthStateChange((_event, session) => {
+  if (session) onLoggedIn(session.user);
+  else showAuthScreen();
+});
+
+function showAuthScreen() {
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('navUser').style.display = 'none';
+  currentUser = null;
+}
+
+function onLoggedIn(user) {
+  currentUser = user;
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('navUser').style.display = 'flex';
+  document.getElementById('navUserEmail').textContent = user.email;
+  loadSavedFalKey(user.id);
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = 'Sign In →';
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+}
+
+async function doSignup() {
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  const falKey = document.getElementById('signupFalKey').value.trim();
+  const btn = document.getElementById('signupBtn');
+  const errEl = document.getElementById('signupError');
+  const okEl = document.getElementById('signupSuccess');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Please fill in email and password.'; errEl.style.display = 'block'; return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Creating account…';
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  btn.disabled = false; btn.textContent = 'Create Account →';
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+  // Save FAL key if provided
+  if (falKey && data.user) await storeFalKey(data.user.id, falKey);
+  okEl.textContent = '✓ Account created! Check your email to confirm, then sign in.';
+  okEl.style.display = 'block';
+}
+
+async function signOut() {
+  await supabase.auth.signOut();
+  document.getElementById('apiKey').value = '';
+  updateApiStatus();
+}
+
+// ─── FAL KEY STORAGE ──────────────────────────────────────
+// Store FAL key in Supabase user metadata (encrypted at rest by Supabase)
+async function storeFalKey(userId, key) {
+  await supabase.auth.updateUser({ data: { fal_key: key } });
+}
+
+async function loadSavedFalKey(userId) {
+  const { data: { user } } = await supabase.auth.getUser();
+  const saved = user?.user_metadata?.fal_key;
+  if (saved) {
+    document.getElementById('apiKey').value = saved;
+    updateApiStatus();
+    document.getElementById('saveKeyBtn').textContent = '✓ Key saved';
+    document.getElementById('saveKeyBtn').style.color = 'var(--success)';
+    document.getElementById('saveKeyBtn').style.borderColor = 'rgba(76,252,156,0.3)';
+  }
+}
+
+async function saveFalKey() {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key || key.length < 10) { alert('Please enter a valid FAL key first.'); return; }
+  if (!currentUser) { alert('Please sign in first.'); return; }
+  const btn = document.getElementById('saveKeyBtn');
+  btn.textContent = 'Saving…';
+  await storeFalKey(currentUser.id, key);
+  btn.textContent = '✓ Key saved';
+  btn.style.color = 'var(--success)';
+  btn.style.borderColor = 'rgba(76,252,156,0.3)';
 }
 </script>
 </body>
