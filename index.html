@@ -214,6 +214,65 @@
 
   /* FAL key save indicator */
   .fal-saved-badge { font-size:0.72rem; padding:0.2rem 0.6rem; border-radius:100px; background:rgba(76,252,156,0.1); border:1px solid rgba(76,252,156,0.3); color:var(--success); }
+
+  /* ===== DASHBOARD TAB ===== */
+  .dash-layout { padding:2rem; }
+  .dash-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
+  .dash-title { font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; letter-spacing:-0.02em; }
+  .dash-title span { color:var(--muted); font-weight:400; font-size:0.9rem; margin-left:0.5rem; }
+  .dash-stats { display:flex; gap:1rem; flex-wrap:wrap; }
+  .dash-stat { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:0.75rem 1.25rem; text-align:center; min-width:90px; }
+  .dash-stat-num { font-family:'Syne',sans-serif; font-weight:800; font-size:1.5rem; color:var(--accent); line-height:1; }
+  .dash-stat-label { font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:0.25rem; }
+
+  .dash-filter-bar { display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .dash-filter { padding:0.4rem 0.9rem; border-radius:100px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.75rem; font-weight:500; cursor:pointer; transition:all 0.2s; }
+  .dash-filter:hover { border-color:var(--accent); color:var(--text); }
+  .dash-filter.active { border-color:var(--accent); background:rgba(124,108,252,0.15); color:var(--accent); }
+
+  .dash-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:1rem; }
+  .dash-card {
+    background:var(--surface2); border:1px solid var(--border); border-radius:14px;
+    overflow:hidden; transition:all 0.25s; cursor:pointer; position:relative;
+    animation:fadeIn 0.3s ease;
+  }
+  .dash-card:hover { border-color:var(--accent); transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,0,0,0.4); }
+  .dash-card-img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:var(--surface); }
+  .dash-card-info { padding:0.75rem 0.9rem; }
+  .dash-card-style { font-size:0.7rem; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.25rem; }
+  .dash-card-prompt { font-size:0.78rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:0.4rem; }
+  .dash-card-date { font-size:0.68rem; color:var(--muted); opacity:0.6; }
+  .dash-card-actions { position:absolute; top:0.5rem; right:0.5rem; display:flex; gap:0.35rem; opacity:0; transition:opacity 0.2s; }
+  .dash-card:hover .dash-card-actions { opacity:1; }
+  .dash-card-btn { width:30px; height:30px; border-radius:8px; border:none; display:flex; align-items:center; justify-content:center; font-size:0.85rem; cursor:pointer; transition:all 0.15s; backdrop-filter:blur(8px); }
+  .dash-card-btn.dl { background:rgba(124,108,252,0.85); color:white; }
+  .dash-card-btn.edit { background:rgba(252,108,156,0.85); color:white; }
+  .dash-card-btn.del { background:rgba(252,80,80,0.85); color:white; }
+  .dash-card-btn:hover { transform:scale(1.1); }
+  .dash-card-type { position:absolute; top:0.5rem; left:0.5rem; font-size:0.62rem; font-weight:700; padding:0.2rem 0.55rem; border-radius:100px; backdrop-filter:blur(8px); }
+  .dash-card-type.render { background:rgba(124,108,252,0.8); color:white; }
+  .dash-card-type.edit { background:rgba(252,108,156,0.8); color:white; }
+
+  .dash-empty { text-align:center; padding:4rem 2rem; color:var(--muted); }
+  .dash-empty .ph-icon { font-size:3.5rem; margin-bottom:1rem; opacity:0.3; }
+  .dash-empty h3 { font-family:'Syne',sans-serif; font-size:1.1rem; margin-bottom:0.5rem; color:var(--text); }
+  .dash-empty p { font-size:0.85rem; line-height:1.6; max-width:280px; margin:0 auto; }
+  .dash-empty-btn { margin-top:1.25rem; display:inline-block; padding:0.7rem 1.5rem; border-radius:10px; background:linear-gradient(135deg,var(--accent),#9c6cfc); color:white; font-family:'Syne',sans-serif; font-size:0.85rem; font-weight:700; cursor:pointer; border:none; }
+
+  .dash-loading { text-align:center; padding:3rem; color:var(--muted); }
+  .dash-spinner { width:36px; height:36px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--accent); animation:spin 0.8s linear infinite; margin:0 auto 1rem; }
+
+  /* Lightbox */
+  .lightbox { position:fixed; inset:0; z-index:300; background:rgba(0,0,0,0.92); display:none; align-items:center; justify-content:center; padding:1.5rem; backdrop-filter:blur(4px); }
+  .lightbox.open { display:flex; animation:fadeIn 0.2s ease; }
+  .lightbox-inner { position:relative; max-width:900px; width:100%; }
+  .lightbox img { width:100%; border-radius:16px; border:1px solid var(--border); display:block; }
+  .lightbox-close { position:absolute; top:-14px; right:-14px; width:32px; height:32px; border-radius:50%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+  .lightbox-close:hover { background:var(--surface2); border-color:var(--accent); }
+  .lightbox-meta { margin-top:1rem; display:flex; gap:1rem; flex-wrap:wrap; align-items:center; }
+  .lightbox-meta span { font-size:0.78rem; color:var(--muted); }
+  .lightbox-dl { padding:0.5rem 1.25rem; border-radius:8px; background:linear-gradient(135deg,var(--accent),#9c6cfc); color:white; font-family:'Syne',sans-serif; font-size:0.8rem; font-weight:700; border:none; cursor:pointer; margin-left:auto; }
+  .lightbox-edit { padding:0.5rem 1.25rem; border-radius:8px; background:linear-gradient(135deg,var(--accent2),#e04080); color:white; font-family:'Syne',sans-serif; font-size:0.8rem; font-weight:700; border:none; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -301,8 +360,9 @@
     </div>
 
     <div class="tab-bar">
-      <button class="tab-btn active" onclick="switchTab('render',this)">✦ Generate Render</button>
-      <button class="tab-btn" onclick="switchTab('edit',this)">✏ Edit Selection</button>
+      <button class="tab-btn active" id="tabRender" onclick="switchTab('render',this)">✦ Generate Render</button>
+      <button class="tab-btn" id="tabEdit" onclick="switchTab('edit',this)">✏ Edit Selection</button>
+      <button class="tab-btn" id="tabDash" onclick="switchTab('dash',this)">🗂 My Renders</button>
     </div>
 
     <!-- RENDER TAB -->
@@ -425,6 +485,51 @@
       </div>
     </div>
 
+  <!-- DASHBOARD TAB -->
+    <div class="tab-panel" id="tab-dash">
+      <div class="dash-layout">
+        <div class="dash-header">
+          <div>
+            <div class="dash-title">My Renders <span id="dashCount"></span></div>
+          </div>
+          <div class="dash-stats">
+            <div class="dash-stat"><div class="dash-stat-num" id="statTotal">—</div><div class="dash-stat-label">Total</div></div>
+            <div class="dash-stat"><div class="dash-stat-num" id="statRenders">—</div><div class="dash-stat-label">Renders</div></div>
+            <div class="dash-stat"><div class="dash-stat-num" id="statEdits">—</div><div class="dash-stat-label">Edits</div></div>
+          </div>
+        </div>
+
+        <div class="dash-filter-bar">
+          <button class="dash-filter active" onclick="filterDash('all',this)">All</button>
+          <button class="dash-filter" onclick="filterDash('render',this)">Renders only</button>
+          <button class="dash-filter" onclick="filterDash('edit',this)">Edits only</button>
+        </div>
+
+        <div id="dashLoading" class="dash-loading"><div class="dash-spinner"></div><p>Loading your renders…</p></div>
+        <div id="dashEmpty" class="dash-empty" style="display:none;">
+          <div class="ph-icon">🖼</div>
+          <h3>No renders yet</h3>
+          <p>Generate your first photorealistic render and it will appear here automatically.</p>
+          <button class="dash-empty-btn" onclick="switchTab('render', document.getElementById('tabRender'))">✦ Generate First Render</button>
+        </div>
+        <div class="dash-grid" id="dashGrid"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+    <div class="lightbox-inner">
+      <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+      <img id="lightboxImg" src="" alt="Render preview">
+      <div class="lightbox-meta">
+        <span id="lightboxStyle"></span>
+        <span id="lightboxDate"></span>
+        <button class="lightbox-edit" onclick="lightboxEditRender()">✏ Edit this</button>
+        <button class="lightbox-dl" onclick="lightboxDownload()">⬇ Download</button>
+      </div>
+    </div>
   </div>
 
   <p class="help-note">
@@ -480,6 +585,7 @@ function switchTab(tab, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'dash') loadDashboard();
 }
 
 // ─── RENDER TAB ───────────────────────────────────────────
@@ -552,6 +658,9 @@ function showOutput(url) {
   document.getElementById('placeholder').style.display = 'none';
   document.getElementById('downloadBtn').style.display = 'block';
   document.getElementById('editThisBtn').style.display = 'block';
+  // Auto-save to history
+  const prompt = document.getElementById('customPrompt').value.trim();
+  saveRenderToHistory(url, 'render', selectedStyle, prompt);
 }
 function showError(msg) { document.getElementById('errorMsg').textContent = msg; document.getElementById('errorMsg').style.display = 'block'; document.getElementById('placeholder').style.display = 'flex'; }
 function clearError() { document.getElementById('errorMsg').style.display = 'none'; }
@@ -778,6 +887,9 @@ function showEditResult(url) {
   const img = document.getElementById('editResultImg');
   img.src = url; img.style.display = 'block';
   document.getElementById('useAsSourceBtn').style.display = 'block';
+  // Auto-save to history
+  const prompt = document.getElementById('editPrompt').value.trim();
+  saveRenderToHistory(url, 'edit', selectedStyle, prompt);
 }
 function showEditError(msg) { const el = document.getElementById('editError'); el.textContent = msg; el.style.display = 'block'; }
 function clearEditError() { document.getElementById('editError').style.display = 'none'; }
@@ -954,6 +1066,145 @@ async function saveFalKey() {
   }
   btn.disabled = false;
 }
+// ─── DASHBOARD ────────────────────────────────────────────
+let allRenders = [];
+let dashFilter = 'all';
+let lightboxCurrent = null;
+
+async function loadDashboard() {
+  if (!currentUser) return;
+  document.getElementById('dashLoading').style.display = 'block';
+  document.getElementById('dashGrid').innerHTML = '';
+  document.getElementById('dashEmpty').style.display = 'none';
+  try {
+    const { data, error } = await sb
+      .from('render_history')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    allRenders = data || [];
+    renderDashboard();
+  } catch(e) {
+    document.getElementById('dashLoading').style.display = 'none';
+    console.error('Dashboard load error:', e);
+  }
+}
+
+function renderDashboard() {
+  const filtered = dashFilter === 'all' ? allRenders
+    : allRenders.filter(r => r.source_type === dashFilter);
+
+  document.getElementById('dashLoading').style.display = 'none';
+  document.getElementById('statTotal').textContent = allRenders.length;
+  document.getElementById('statRenders').textContent = allRenders.filter(r=>r.source_type==='render').length;
+  document.getElementById('statEdits').textContent = allRenders.filter(r=>r.source_type==='edit').length;
+  document.getElementById('dashCount').textContent = allRenders.length > 0 ? '(' + allRenders.length + ')' : '';
+
+  if (filtered.length === 0) {
+    document.getElementById('dashEmpty').style.display = 'block';
+    document.getElementById('dashGrid').innerHTML = '';
+    return;
+  }
+  document.getElementById('dashEmpty').style.display = 'none';
+
+  document.getElementById('dashGrid').innerHTML = filtered.map(r => {
+    const date = new Date(r.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const styleLabel = r.style ? r.style.split(',')[0].replace('photorealistic','').replace('dramatic','').trim() : 'Custom';
+    const prompt = r.prompt || 'No description';
+    const typeLabel = r.source_type === 'edit' ? 'Edit' : 'Render';
+    return `<div class="dash-card" onclick="openLightbox('${r.id}')">
+      <div class="dash-card-type ${r.source_type}">${typeLabel}</div>
+      <div class="dash-card-actions">
+        <button class="dash-card-btn dl" onclick="event.stopPropagation();downloadFromHistory('${r.render_url}')" title="Download">⬇</button>
+        <button class="dash-card-btn edit" onclick="event.stopPropagation();editFromHistory('${r.render_url}')" title="Edit">✏</button>
+        <button class="dash-card-btn del" onclick="event.stopPropagation();deleteRender('${r.id}')" title="Delete">🗑</button>
+      </div>
+      <img class="dash-card-img" src="${r.render_url}" alt="Render" loading="lazy" onerror="this.style.background='var(--surface2)';this.style.minHeight='160px'">
+      <div class="dash-card-info">
+        <div class="dash-card-style">${styleLabel}</div>
+        <div class="dash-card-prompt">${prompt}</div>
+        <div class="dash-card-date">${date}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterDash(type, btn) {
+  dashFilter = type;
+  document.querySelectorAll('.dash-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
+async function saveRenderToHistory(url, type, style, prompt) {
+  if (!currentUser) return;
+  try {
+    await sb.from('render_history').insert({
+      user_id: currentUser.id,
+      render_url: url,
+      source_type: type,
+      style: style || '',
+      prompt: prompt || ''
+    });
+  } catch(e) { console.error('Could not save to history:', e); }
+}
+
+async function deleteRender(id) {
+  if (!confirm('Delete this render from your history?')) return;
+  try {
+    await sb.from('render_history').delete().eq('id', id);
+    allRenders = allRenders.filter(r => r.id !== id);
+    renderDashboard();
+  } catch(e) { alert('Could not delete: ' + e.message); }
+}
+
+function downloadFromHistory(url) {
+  const a = document.createElement('a'); a.href = url; a.download = 'zokei3d-render.png'; a.target = '_blank'; a.click();
+}
+
+function editFromHistory(url) {
+  const img = new Image(); img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    loadImageOntoCanvas(img, url);
+    switchTab('edit', document.getElementById('tabEdit'));
+  };
+  img.src = url;
+}
+
+// Lightbox
+function openLightbox(id) {
+  const r = allRenders.find(x => x.id === id);
+  if (!r) return;
+  lightboxCurrent = r;
+  document.getElementById('lightboxImg').src = r.render_url;
+  const date = new Date(r.created_at).toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+  const styleLabel = r.style ? r.style.split(',')[0].replace('photorealistic','').replace('dramatic','').trim() : 'Custom';
+  document.getElementById('lightboxStyle').textContent = '✦ ' + styleLabel;
+  document.getElementById('lightboxDate').textContent = date;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(e) {
+  if (e && e.target !== document.getElementById('lightbox') && !e.target.classList.contains('lightbox-close')) return;
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+  lightboxCurrent = null;
+}
+
+function lightboxDownload() {
+  if (lightboxCurrent) downloadFromHistory(lightboxCurrent.render_url);
+}
+
+function lightboxEditRender() {
+  if (!lightboxCurrent) return;
+  closeLightbox({ target: document.getElementById('lightbox') });
+  editFromHistory(lightboxCurrent.render_url);
+}
+
+// Close lightbox with Escape key
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox({ target: document.getElementById('lightbox') }); });
+
 </script>
 </body>
 </html>
