@@ -267,12 +267,112 @@
   .lightbox.open { display:flex; animation:fadeIn 0.2s ease; }
   .lightbox-inner { position:relative; max-width:900px; width:100%; }
   .lightbox img { width:100%; border-radius:16px; border:1px solid var(--border); display:block; }
-  .lightbox-close { position:absolute; top:-14px; right:-14px; width:32px; height:32px; border-radius:50%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+  .lightbox-close { position:absolute; top:-12px; right:-12px; width:32px; height:32px; border-radius:50%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
   .lightbox-close:hover { background:var(--surface2); border-color:var(--accent); }
   .lightbox-meta { margin-top:1rem; display:flex; gap:1rem; flex-wrap:wrap; align-items:center; }
   .lightbox-meta span { font-size:0.78rem; color:var(--muted); }
   .lightbox-dl { padding:0.5rem 1.25rem; border-radius:8px; background:linear-gradient(135deg,var(--accent),#9c6cfc); color:white; font-family:'Syne',sans-serif; font-size:0.8rem; font-weight:700; border:none; cursor:pointer; margin-left:auto; }
   .lightbox-edit { padding:0.5rem 1.25rem; border-radius:8px; background:linear-gradient(135deg,var(--accent2),#e04080); color:white; font-family:'Syne',sans-serif; font-size:0.8rem; font-weight:700; border:none; cursor:pointer; }
+
+  /* ================================================
+     MOBILE RESPONSIVE — full audit fixes
+     Tested breakpoints: 360px, 390px, 430px, 768px
+  ================================================ */
+
+  @media (max-width: 600px) {
+
+    /* NAV — reduce padding, hide email, stack if needed */
+    nav { padding:0.85rem 1rem; gap:0.5rem; }
+    .nav-user-email { display:none; }
+    .nav-badge:first-of-type { display:none; } /* hide FAL badge on tiny screens */
+
+    /* MAIN — tighter side padding */
+    main { padding:1.75rem 1rem 3rem; }
+
+    /* HERO */
+    .hero { margin-bottom:2rem; }
+    .hero p { font-size:0.95rem; }
+
+    /* TABS — smaller padding, allow text to be compact */
+    .tab-btn { padding:0.75rem 0.5rem; font-size:0.68rem; letter-spacing:0.04em; }
+
+    /* API SECTION — stack vertically */
+    .api-section { flex-direction:column; align-items:stretch; padding:1rem; gap:0.6rem; }
+    .api-input-wrap { min-width:unset; }
+    #saveKeyBtn { width:100%; text-align:center; }
+
+    /* PANELS — already 1-col but fix padding */
+    .panel { padding:1.25rem 1rem; }
+    .panel-left { border-right:none; border-bottom:1px solid var(--border); }
+
+    /* STYLE GRID — 2 cols on mobile for better tap targets */
+    .style-grid { grid-template-columns:repeat(2,1fr); }
+    .style-btn { padding:0.6rem 0.4rem; font-size:0.75rem; }
+
+    /* UPLOAD ZONE */
+    .upload-zone { padding:1.75rem 1rem; }
+
+    /* RENDER BUTTON */
+    .render-btn { font-size:0.88rem; }
+
+    /* EDIT TAB — canvas area */
+    .canvas-area { padding:1rem; }
+    .canvas-toolbar { gap:0.35rem; }
+    .canvas-hint { display:none; } /* hide hint text on mobile — saves space */
+    .tool-btn { font-size:0.7rem; padding:0.4rem 0.65rem; }
+    .canvas-wrap { min-height:260px; }
+    #editCanvas { max-height:320px; }
+    .edit-controls { padding:1rem; gap:0.85rem; }
+    .quick-edits { grid-template-columns:repeat(2,1fr); }
+
+    /* DASHBOARD */
+    .dash-layout { padding:1.25rem 1rem; }
+    .dash-header { flex-direction:column; align-items:flex-start; gap:0.75rem; }
+    .dash-stats { width:100%; justify-content:space-between; }
+    .dash-stat { flex:1; min-width:unset; padding:0.6rem 0.5rem; }
+    .dash-stat-num { font-size:1.2rem; }
+    .dash-grid { grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:0.75rem; }
+    .dash-filter-bar { gap:0.35rem; }
+    .dash-filter { font-size:0.7rem; padding:0.35rem 0.7rem; }
+
+    /* LIGHTBOX — full screen on mobile */
+    .lightbox { padding:0; align-items:flex-end; }
+    .lightbox-inner { max-width:100%; border-radius:20px 20px 0 0; background:var(--surface); padding:0 0 2rem; }
+    .lightbox img { border-radius:16px 16px 0 0; }
+    .lightbox-close { top:0.75rem; right:0.75rem; position:relative; margin:0.75rem 0.75rem 0 auto; display:block; }
+    .lightbox-meta { padding:0.75rem 1rem 0; flex-wrap:wrap; gap:0.5rem; }
+    .lightbox-dl, .lightbox-edit { flex:1; text-align:center; }
+
+    /* AUTH CARD */
+    .auth-card { padding:1.75rem 1.25rem; border-radius:20px; }
+
+    /* FOOTER */
+    footer { flex-direction:column; align-items:center; text-align:center; padding:1.25rem 1rem; }
+  }
+
+  @media (max-width: 380px) {
+    /* Extra small phones (SE, Galaxy A series) */
+    .tab-btn { font-size:0.62rem; padding:0.7rem 0.35rem; }
+    .hero h1 { font-size:2rem; }
+    .dash-grid { grid-template-columns:1fr 1fr; }
+  }
+
+  @media (min-width: 601px) and (max-width: 900px) {
+    /* Tablets — minor tweaks */
+    nav { padding:1rem 1.5rem; }
+    main { padding:2.5rem 1.5rem 4rem; }
+    .dash-grid { grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); }
+    .canvas-wrap { min-height:320px; }
+  }
+
+  /* Touch — bigger tap targets */
+  @media (hover: none) {
+    .style-btn { padding:0.7rem 0.4rem; }
+    .quick-edit-btn { padding:0.6rem 0.4rem; }
+    .dash-card-actions { opacity:1; } /* always show on touch devices */
+    .dash-card:hover { transform:none; } /* disable hover lift on touch */
+  }
+
 </style>
 </head>
 <body>
