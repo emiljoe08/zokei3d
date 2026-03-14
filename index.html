@@ -73,12 +73,13 @@ nav.scrolled {
   border-bottom-color:var(--border);
 }
 .nav-logo {
-  font-family:'Cormorant Garamond', serif;
-  font-size:1.5rem; font-weight:700; letter-spacing:0.05em;
-  color:var(--gold);
+  font-family:'Syne', sans-serif;
+  font-size:1.2rem; font-weight:800; letter-spacing:-0.02em;
+  background:linear-gradient(135deg,var(--gold),var(--accent));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
   text-decoration:none;
 }
-.nav-logo span { color:var(--muted); font-weight:300; }
+.nav-logo span { -webkit-text-fill-color:var(--muted); background:none; font-weight:400; font-size:0.85em; }
 .nav-links { display:flex; align-items:center; gap:2.5rem; }
 .nav-links a {
   font-size:0.78rem; font-weight:500; color:var(--muted);
@@ -123,9 +124,11 @@ nav.scrolled {
 .hero-eyebrow {
   display:inline-flex; align-items:center; gap:0.75rem;
   font-size:0.72rem; letter-spacing:0.2em; text-transform:uppercase;
-  color:var(--gold); font-weight:500;
+  color:var(--gold); font-weight:600;
   margin-bottom:1.5rem;
   opacity:0; animation:fadeUp 0.8s ease 0.2s forwards;
+  animation-fill-mode:forwards;
+  padding:0.35rem 1rem; border:1px solid rgba(124,108,252,0.3); border-radius:100px; background:rgba(124,108,252,0.08);
 }
 .hero-eyebrow::before { content:''; width:32px; height:1px; background:linear-gradient(90deg,var(--gold),var(--accent)); }
 
@@ -136,7 +139,7 @@ nav.scrolled {
   letter-spacing:-0.02em;
   max-width:900px;
   margin-bottom:2rem;
-  opacity:0; animation:fadeUp 0.8s ease 0.35s forwards;
+  opacity:0; animation:fadeUp 0.8s ease 0.35s forwards; animation-fill-mode:forwards;
 }
 .hero-headline em { font-style:italic; color:var(--gold); }
 .hero-headline strong { font-weight:700; display:block; }
@@ -144,12 +147,12 @@ nav.scrolled {
 .hero-sub {
   font-size:1.05rem; font-weight:300; color:var(--muted);
   max-width:480px; line-height:1.8; margin-bottom:3rem;
-  opacity:0; animation:fadeUp 0.8s ease 0.5s forwards;
+  opacity:0; animation:fadeUp 0.8s ease 0.5s forwards; animation-fill-mode:forwards;
 }
 
 .hero-actions {
   display:flex; align-items:center; gap:1.5rem;
-  opacity:0; animation:fadeUp 0.8s ease 0.65s forwards;
+  opacity:0; animation:fadeUp 0.8s ease 0.65s forwards; animation-fill-mode:forwards;
 }
 .btn-primary {
   display:inline-flex; align-items:center; gap:0.75rem;
@@ -171,7 +174,7 @@ nav.scrolled {
 .hero-stat-row {
   position:absolute; bottom:3rem; right:3rem;
   display:flex; gap:3rem;
-  opacity:0; animation:fadeUp 0.8s ease 0.8s forwards;
+  opacity:0; animation:fadeUp 0.8s ease 0.8s forwards; animation-fill-mode:forwards;
 }
 .hero-stat { text-align:right; }
 .hero-stat-num {
@@ -495,8 +498,9 @@ footer {
 .footer-top { display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; gap:3rem; margin-bottom:4rem; }
 .footer-brand { }
 .footer-logo {
-  font-family:'Cormorant Garamond', serif;
-  font-size:1.4rem; font-weight:700; background:linear-gradient(135deg,var(--gold),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  font-family:'Syne', sans-serif;
+  font-size:1.15rem; font-weight:800; letter-spacing:-0.02em;
+  background:linear-gradient(135deg,var(--gold),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   margin-bottom:0.75rem; display:block;
 }
 .footer-tagline { font-size:0.82rem; color:var(--muted); line-height:1.7; max-width:240px; }
@@ -517,10 +521,11 @@ footer {
 
 /* ── SCROLL REVEAL ── */
 .reveal {
-  opacity:0; transform:translateY(30px);
+  opacity:1; transform:translateY(0);
   transition:opacity 0.7s ease, transform 0.7s ease;
 }
-.reveal.visible { opacity:1; transform:translateY(0); }
+.reveal.hidden { opacity:0; transform:translateY(30px); }
+.reveal.hidden.visible { opacity:1; transform:translateY(0); }
 .reveal-delay-1 { transition-delay:0.1s; }
 .reveal-delay-2 { transition-delay:0.2s; }
 .reveal-delay-3 { transition-delay:0.3s; }
@@ -994,10 +999,26 @@ window.addEventListener('scroll', () => {
 
 // ── SCROLL REVEAL ──
 const revealEls = document.querySelectorAll('.reveal');
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
-}, { threshold: 0.12 });
-revealEls.forEach(el => observer.observe(el));
+// Only hide elements if IntersectionObserver is supported
+if ('IntersectionObserver' in window) {
+  revealEls.forEach(el => el.classList.add('hidden'));
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.05, rootMargin: '0px 0px -60px 0px' });
+  revealEls.forEach(el => observer.observe(el));
+  // Immediately reveal anything in viewport on load
+  setTimeout(() => {
+    revealEls.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight) el.classList.add('visible');
+    });
+  }, 100);
+}
 
 // ── BEFORE/AFTER SLIDER ──
 const slider = document.getElementById('baSlider');
